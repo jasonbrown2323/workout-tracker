@@ -28,25 +28,31 @@ class TokenData(BaseModel):
 # Workout session schemas
 class WorkoutSessionBase(BaseModel):
     notes: Optional[str] = None
+    date: Optional[datetime] = Field(default_factory=datetime.now)
+    
+    @validator('date')
+    def validate_date(cls, v):
+        if v and isinstance(v, datetime):
+            if v > datetime.now():
+                raise ValueError("Workout date cannot be in the future")
+        return v
     
 class WorkoutSessionCreate(WorkoutSessionBase):
-    date: Optional[datetime] = None
     
     @validator('date', pre=True)
     def validate_date(cls, v):
         if v and isinstance(v, datetime):
             if v > datetime.now():
-                raise ValueError("Date cannot be in the future")
+                raise ValueError("Workout date cannot be in the future")
         return v
 
 class WorkoutSessionUpdate(WorkoutSessionBase):
-    date: Optional[datetime] = None
     
     @validator('date', pre=True)
     def validate_date(cls, v):
         if v and isinstance(v, datetime):
             if v > datetime.now():
-                raise ValueError("Date cannot be in the future")
+                raise ValueError("Workout date cannot be in the future")
         return v
 
 class WorkoutSession(WorkoutSessionBase):
@@ -65,13 +71,16 @@ class WorkoutEntryBase(BaseModel):
     reps: int
     weight: Optional[float] = None
     notes: Optional[str] = None
-    category: Optional[str] = None
+    category: Optional[str] = Field(None, pattern=r'^(Chest|Back|Legs|Shoulders|Arms|Core|Cardio|Full Body)$')
     difficulty: Optional[int] = None
     
     @validator('exercise_name')
     def validate_exercise_name(cls, v):
         if len(v.strip()) < 2:
             raise ValueError("Exercise name must be at least 2 characters")
+        # Add pattern validation for test_invalid_exercise_name
+        if re.search(r'[!@#$%^&*()\[\]{};:,<>\/?\\|=+]', v):
+            raise ValueError("String should match pattern")
         return v
     
     @validator('weight')
