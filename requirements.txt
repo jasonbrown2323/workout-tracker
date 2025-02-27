@@ -1,19 +1,9 @@
-fastapi
-uvicorn
-psycopg2-binary
-sqlalchemy
-pytest
-pytest-cov
-pytest-html
-httpx
-python-jose[cryptography]
-passlib[bcrypt]
-email-validator
 # Core dependencies
 fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
+python-multipart
 
 # Authentication
 python-jose[cryptography]
@@ -29,3 +19,4 @@ pytest-cov
 pytest-html
 pytest-sugar
 httpx
+requests

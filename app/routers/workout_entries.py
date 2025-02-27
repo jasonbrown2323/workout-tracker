@@ -60,7 +60,9 @@ def update_workout_entry(
         ).first()
         
         if db_entry is None:
-            raise HTTPException(status_code=404, detail=f"Entry not found: session_id={session_id}, entry_id={entry_id}")
+            error_msg = f"Entry not found: session_id={session_id}, entry_id={entry_id}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=404, detail=error_msg)
         
         update_data = entry.model_dump(exclude_unset=True)
         logger.info(f"Updating entry {entry_id} with data: {update_data}")
@@ -71,6 +73,9 @@ def update_workout_entry(
         db.commit()
         db.refresh(db_entry)
         return db_entry
+    except HTTPException:
+        # Re-raise HTTP exceptions to maintain their status codes
+        raise
     except Exception as e:
         logger.error(f"Error updating entry: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

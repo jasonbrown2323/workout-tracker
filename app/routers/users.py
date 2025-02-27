@@ -3,10 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 from ..database import get_db
 from .. import models, schemas
-from passlib.context import CryptContext
+from ..utils.auth import get_password_hash, get_current_active_user
 
 router = APIRouter()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
@@ -14,7 +13,7 @@ def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    hashed_password = pwd_context.hash(user.password)
+    hashed_password = get_password_hash(user.password)
     db_user = models.User(email=user.email, hashed_password=hashed_password)
     db.add(db_user)
     db.commit()

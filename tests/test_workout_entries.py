@@ -1,9 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-from app import models  # Add this import
-from .test_workouts import test_user  # only import test_user fixture
+from app import models
+from app.utils.auth import get_current_active_user
+from .test_workouts import test_user, override_get_current_active_user
 
+# Override authentication for tests
+app.dependency_overrides[get_current_active_user] = override_get_current_active_user
 client = TestClient(app)
 
 def test_create_workout_entry(test_user, test_db):  # test_db comes from conftest.py
@@ -11,10 +14,11 @@ def test_create_workout_entry(test_user, test_db):  # test_db comes from conftes
     workout_response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
+            # user_id is no longer needed as it comes from the authenticated user
         }
     )
+    assert workout_response.status_code == 200
     workout_id = workout_response.json()["id"]
     
     # Then create a workout entry with category
@@ -58,10 +62,11 @@ def test_read_workout_entries(test_user, test_db):
     workout_response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
+            # user_id is no longer needed as it comes from the authenticated user
         }
     )
+    assert workout_response.status_code == 200
     workout_id = workout_response.json()["id"]
     
     response = client.get(f"/workouts/{workout_id}/entries")
@@ -110,8 +115,9 @@ def test_update_workout_entry(test_user, test_db):
     # Create test workout and entry first
     workout_response = client.post(
         "/workouts/",
-        json={"notes": "Test workout", "user_id": test_user.id}
+        json={"notes": "Test workout"}
     )
+    assert workout_response.status_code == 200
     workout_id = workout_response.json()["id"]
     
     entry_response = client.post(
@@ -155,8 +161,9 @@ def test_delete_workout_entry(test_user, test_db):
     # Create test workout and entry
     workout_response = client.post(
         "/workouts/",
-        json={"notes": "Test workout", "user_id": test_user.id}
+        json={"notes": "Test workout"}
     )
+    assert workout_response.status_code == 200
     workout_id = workout_response.json()["id"]
     
     entry_response = client.post(

@@ -1,59 +1,82 @@
 # Workout Tracker
 
-A FastAPI-based workout tracking application that helps users manage and monitor their fitness progress.
+A full-stack application for tracking workouts, with a FastAPI backend and React frontend.
 
 ## Features
 
-- Track workouts and exercises
+- User authentication with JWT
+- Track workouts, exercises, sets, reps, and weight
+- Workout plans and templates
+- Exercise statistics and progress tracking
+- Plate calculator for barbell exercises
 - PostgreSQL database for data storage
 - Docker containerization for easy deployment
 - RESTful API endpoints
 
 ## Prerequisites
 
-- Docker
-- Docker Compose
+- Docker and Docker Compose
 
 ## Setup
 
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/workout-tracker2.git
-cd workout-tracker2
-```
-
-2. Start the application:
-```bash
-docker-compose up -d
-```
-
-The application will be available at `http://localhost:8000`
-
-## API Documentation
-
-Once the application is running, you can access:
-- API documentation: `http://localhost:8000/docs`
-- Alternative API documentation: `http://localhost:8000/redoc`
-
-## Environment Variables
-
-The following environment variables are configured in docker-compose.yml:
-
-- `DB_HOST`: PostgreSQL host
-- `DB_PORT`: PostgreSQL port
-- `DB_NAME`: Database name
-- `DB_USER`: Database user
-- `DB_PASSWORD`: Database password
-
-## Development
-
-To run the application in development mode:
+### Production Setup
 
 ```bash
-docker-compose up --build
+# Start all services
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Access the application
+# Frontend: http://localhost
+# API docs: http://localhost/docs
 ```
 
-The application will reload automatically when you make changes to the code.
+### Development Setup
+
+```bash
+# Start with development configuration
+docker compose -f docker-compose.dev.yml up -d
+
+# Access development services
+# Frontend: http://localhost:3002
+# Backend API: http://localhost:8000
+# API docs: http://localhost:8000/docs
+```
+
+## Configuration
+
+### Environment Variables
+
+Backend:
+- `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`: Database connection
+- `SECRET_KEY`, `ACCESS_TOKEN_EXPIRE_MINUTES`: JWT authentication
+- `ALLOWED_ORIGINS`: CORS configuration (comma-separated list or "*" for all)
+
+Frontend:
+- `REACT_APP_API_URL`: API endpoint URL
+- `REACT_APP_ENV`: "development" or "production"
+
+## Running Tests
+
+Backend Tests:
+```bash
+docker compose exec backend pytest -v --cov=app --cov-report=term-missing
+```
+
+Frontend Tests:
+```bash
+docker compose exec frontend npm test
+```
+
+## API Structure
+
+- `/auth`: Authentication (login, user info)
+- `/users`: User management
+- `/workouts`: Workout session management
+- `/workout-plans`: Workout planning
+- `/workout-templates`: Exercise templates
 
 ## License
 

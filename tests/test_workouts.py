@@ -5,6 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from app.main import app
 from app.database import Base, get_db
 from app import models
+from app.utils.auth import get_current_active_user
 
 # Use SQLite for testing
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -18,7 +19,19 @@ def override_get_db():
     finally:
         db.close()
 
+# Create a dependency override for authentication
+async def override_get_current_active_user():
+    # Return a test user for all authenticated endpoints
+    user = models.User(
+        id=1,
+        email="test@example.com",
+        hashed_password="testpass",
+        is_active=True
+    )
+    return user
+
 app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[get_current_active_user] = override_get_current_active_user
 client = TestClient(app)
 
 def create_test_user(db):
@@ -40,14 +53,15 @@ def test_create_workout(test_user):
     response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
         }
     )
     assert response.status_code == 200
     data = response.json()
     assert data["notes"] == "Test workout"
-    assert data["user_id"] == test_user.id
+    assert "id" in data
+    # user_id should match our authenticated test user (id=1)
+    assert data["user_id"] == 1
     assert "id" in data
 
 def test_read_workouts():
@@ -59,10 +73,10 @@ def test_invalid_workout_entry(test_user, test_db):
     workout_response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
         }
     )
+    assert workout_response.status_code == 200
     workout_id = workout_response.json()["id"]
     
     # Test invalid weight
@@ -94,13 +108,14 @@ def test_search_workouts(test_user, test_db):
 
 def test_exercise_stats(test_user, test_db):
     # Create test workout with entries
-    workout = client.post(
+    workout_response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
         }
-    ).json()
+    )
+    assert workout_response.status_code == 200
+    workout = workout_response.json()
     
     client.post(
         f"/workouts/{workout['id']}/entries",
@@ -126,13 +141,14 @@ def test_exercise_stats_no_data(test_db):
 
 def test_category_stats(test_user, test_db):
     # Create workout with entries
-    workout = client.post(
+    workout_response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
         }
-    ).json()
+    )
+    assert workout_response.status_code == 200
+    workout = workout_response.json()
     
     client.post(
         f"/workouts/{workout['id']}/entries",
@@ -161,13 +177,14 @@ def test_category_stats_no_data(test_db):
 
 def test_personal_records(test_user, test_db):
     # Create workout with entries
-    workout = client.post(
+    workout_response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": test_user.id
+            "notes": "Test workout"
         }
-    ).json()
+    )
+    assert workout_response.status_code == 200
+    workout = workout_response.json()
     
     client.post(
         f"/workouts/{workout['id']}/entries",
@@ -202,14 +219,16 @@ def test_workout_not_found():
     assert response.json()["detail"] == "Workout not found"
 
 def test_workout_create_with_invalid_user(test_db):
+    # Since we're now using the authenticated user, we need to test this differently
+    # This test is now testing that we can create a workout successfully
     response = client.post(
         "/workouts/",
         json={
-            "notes": "Test workout",
-            "user_id": 999  # Non-existent user
+            "notes": "Test workout"
         }
     )
-    assert response.status_code == 404
+    assert response.status_code == 200
+    assert "id" in response.json()
 
 def test_workout_stats_invalid_period(test_db):
     response = client.get("/workouts/stats/exercise/Squat?days=0")

@@ -1,0 +1,51 @@
+{
+  "short_name": "Workout Tracker",
+  "name": "Workout Tracker - Track Your Fitness Progress",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4f46e5",
+  "background_color": "#f9fafb",
+  "description": "Track your workouts, measure progress, and reach your fitness goals.",
+  "categories": ["fitness", "health", "lifestyle", "tracking"],
+  "screenshots": [
+    {
+      "src": "screenshot1.jpg",
+      "sizes": "1280x720",
+      "type": "image/jpeg"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Log Workout",
+      "short_name": "Log",
+      "description": "Log a new workout",
+      "url": "/workouts/create",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "View Workouts",
+      "short_name": "Workouts",
+      "description": "View your workout history",
+      "url": "/workouts",
+      "icons": [{ "src": "logo192.png", "sizes": "192x192" }]
+    }
+  ]
+}

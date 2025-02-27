@@ -7,34 +7,35 @@ from datetime import datetime, timedelta
 from ..database import get_db
 from .. import models, schemas
 from ..utils.plate_calculator import PlateCalculator
+from ..utils.auth import get_current_active_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 @router.post("/", response_model=schemas.WorkoutSession)
-def create_workout(workout: schemas.WorkoutSessionCreate, db: Session = Depends(get_db)):
+def create_workout(
+    workout: schemas.WorkoutSessionCreate, 
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_active_user)
+):
     try:
         # Log incoming request
         logger.info(f"Attempting to create workout with data: {workout.model_dump()}")
         
-        # Verify user exists with detailed logging
-        user = db.query(models.User).filter(models.User.id == workout.user_id).first()
-        logger.info(f"User query result for id {workout.user_id}: {user}")
+        # Use the authenticated user
+        workout_data = workout.model_dump()
+        workout_data["user_id"] = current_user.id
         
-        if not user:
-            logger.error(f"User not found: {workout.user_id}")
-            raise HTTPException(
-                status_code=404, 
-                detail=f"User with id {workout.user_id} not found"
-            )
-
-        db_workout = models.WorkoutSession(**workout.model_dump())
+        db_workout = models.WorkoutSession(**workout_data)
         db.add(db_workout)
         db.commit()
         db.refresh(db_workout)
         logger.info(f"Successfully created workout {db_workout.id}")
         return db_workout
+    except HTTPException:
+        # Re-raise HTTP exceptions to preserve their status codes
+        raise
     except Exception as e:
         logger.error(f"Error creating workout: {str(e)}")
         logger.exception("Full traceback:")
